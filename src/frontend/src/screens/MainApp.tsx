@@ -1,12 +1,14 @@
-import { Building2, LayoutDashboard, User, Users } from "lucide-react";
+import { Building2, Cloud, LayoutDashboard, User, Users } from "lucide-react";
 import { useState } from "react";
 import type { Site } from "../backend.d";
+import { SyncStatusBar } from "../components/app/SyncStatusBar";
+import CloudStorageScreen from "./CloudStorageScreen";
 import DashboardScreen from "./DashboardScreen";
 import LabourScreen from "./LabourScreen";
 import ProfileScreen from "./ProfileScreen";
 import SitesScreen from "./SitesScreen";
 
-type Tab = "dashboard" | "sites" | "labour" | "profile";
+type Tab = "dashboard" | "sites" | "labour" | "profile" | "cloud";
 
 interface Props {
   darkMode: boolean;
@@ -30,6 +32,7 @@ export default function MainApp({
     { id: "dashboard", label: "Dashboard", Icon: LayoutDashboard },
     { id: "sites", label: "Sites", Icon: Building2 },
     { id: "labour", label: "Labour", Icon: Users },
+    { id: "cloud", label: "Cloud", Icon: Cloud },
     { id: "profile", label: "Profile", Icon: User },
   ];
 
@@ -40,6 +43,9 @@ export default function MainApp({
 
   return (
     <div className="flex flex-col min-h-dvh bg-background">
+      {/* Sync status indicator */}
+      <SyncStatusBar />
+
       {/* Main content area */}
       <main className="flex-1 overflow-hidden pb-20">
         {activeTab === "dashboard" && (
@@ -56,6 +62,7 @@ export default function MainApp({
           />
         )}
         {activeTab === "labour" && <LabourScreen />}
+        {activeTab === "cloud" && <CloudStorageScreen />}
         {activeTab === "profile" && <ProfileScreen onLogout={onLogout} />}
       </main>
 
@@ -68,7 +75,7 @@ export default function MainApp({
               <button
                 type="button"
                 key={id}
-                data-ocid={`nav.${id === "dashboard" ? "dashboard" : id === "sites" ? "sites" : id === "labour" ? "labour" : "profile"}_tab`}
+                data-ocid={`nav.${id}_tab`}
                 onClick={() => {
                   setActiveTab(id);
                   if (id !== "sites") setSelectedSite(null);

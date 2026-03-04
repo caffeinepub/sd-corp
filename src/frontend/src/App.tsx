@@ -1,5 +1,6 @@
 import { Toaster } from "@/components/ui/sonner";
 import { useEffect, useState } from "react";
+import { SyncProvider } from "./context/SyncContext";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
 import { useMyProfile } from "./hooks/useQueries";
 
@@ -157,9 +158,9 @@ function AppContent() {
 
 export default function App() {
   return (
-    <>
+    <SyncProvider>
       <AppContent />
       <Toaster position="top-center" richColors />
-    </>
+    </SyncProvider>
   );
 }

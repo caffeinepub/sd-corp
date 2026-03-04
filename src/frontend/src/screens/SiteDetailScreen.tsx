@@ -23,15 +23,19 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft,
   CreditCard,
+  FileText,
+  FolderOpen,
+  Image,
   Loader2,
   Phone,
   Plus,
   TrendingDown,
   TrendingUp,
+  Upload,
   Users,
   Wallet,
 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import type { Site } from "../backend.d";
 import {
@@ -46,6 +50,7 @@ import {
   useLabourBySite,
   useTransactionsBySite,
 } from "../hooks/useQueries";
+import { useSyncContext } from "../hooks/useSyncStatus";
 import {
   formatDate,
   formatINR,
@@ -56,9 +61,31 @@ import {
   txTypeClass,
 } from "../utils/helpers";
 
+interface SiteFile {
+  name: string;
+  uploadedAt: string;
+  category: "photo" | "document";
+}
+
 interface Props {
   site: Site;
   onBack: () => void;
+}
+
+const getSiteFilesKey = (siteId: string) => `sd-site-files-${siteId}`;
+
+function loadSiteFiles(siteId: string): SiteFile[] {
+  try {
+    const raw = localStorage.getItem(getSiteFilesKey(siteId));
+    if (!raw) return [];
+    return JSON.parse(raw) as SiteFile[];
+  } catch {
+    return [];
+  }
+}
+
+function saveSiteFiles(siteId: string, files: SiteFile[]): void {
+  localStorage.setItem(getSiteFilesKey(siteId), JSON.stringify(files));
 }
 
 export default function SiteDetailScreen({ site, onBack }: Props) {
@@ -70,10 +97,18 @@ export default function SiteDetailScreen({ site, onBack }: Props) {
   );
   const addTransaction = useAddTransaction();
   const addLabour = useAddLabour();
+  const { enqueueFileUpload, isConnected, isOnline } = useSyncContext();
 
   const [addTxOpen, setAddTxOpen] = useState(false);
   const [addLabourOpen, setAddLabourOpen] = useState(false);
   const [selectedLabour, setSelectedLabour] = useState<Labour | null>(null);
+  const [siteFiles, setSiteFiles] = useState<SiteFile[]>(() =>
+    loadSiteFiles(site.id.toString()),
+  );
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [docUploading, setDocUploading] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const docInputRef = useRef<HTMLInputElement>(null);
 
   const [txForm, setTxForm] = useState({
     transactionType: TxType.paymentReceived as string,
@@ -91,6 +126,47 @@ export default function SiteDetailScreen({ site, onBack }: Props) {
   });
   const [txErrors, setTxErrors] = useState<Record<string, string>>({});
   const [labourErrors, setLabourErrors] = useState<Record<string, string>>({});
+
+  // File upload handlers
+  const handleFileUpload = async (
+    file: File,
+    category: "photo" | "document",
+  ) => {
+    const setLoading =
+      category === "photo" ? setPhotoUploading : setDocUploading;
+    setLoading(true);
+    try {
+      await enqueueFileUpload(
+        file,
+        category === "photo" ? "photos" : "documents",
+        site.siteName,
+      );
+
+      const newFile: SiteFile = {
+        name: file.name,
+        uploadedAt: new Date().toISOString(),
+        category,
+      };
+      setSiteFiles((prev) => {
+        const updated = [newFile, ...prev];
+        saveSiteFiles(site.id.toString(), updated);
+        return updated;
+      });
+
+      if (!isOnline) {
+        toast.info("File queued. Will sync when online.");
+      } else if (!isConnected) {
+        toast.info("Saved locally. Connect Drive to sync.");
+      } else {
+        toast.success("File uploaded to Drive!");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Upload failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Compute site financials
   const totalReceived =
@@ -254,22 +330,29 @@ export default function SiteDetailScreen({ site, onBack }: Props) {
           </div>
         </div>
 
-        {/* Tabs: Transactions | Labour */}
+        {/* Tabs: Transactions | Labour | Files */}
         <Tabs defaultValue="transactions">
           <TabsList className="w-full mb-4">
             <TabsTrigger
               data-ocid="site_detail.transactions_tab"
               value="transactions"
-              className="flex-1"
+              className="flex-1 text-xs"
             >
               Transactions
             </TabsTrigger>
             <TabsTrigger
               data-ocid="site_detail.labour_tab"
               value="labour"
-              className="flex-1"
+              className="flex-1 text-xs"
             >
               Labour
+            </TabsTrigger>
+            <TabsTrigger
+              data-ocid="site_detail.files_tab"
+              value="files"
+              className="flex-1 text-xs"
+            >
+              Files
             </TabsTrigger>
           </TabsList>
 
@@ -365,6 +448,181 @@ export default function SiteDetailScreen({ site, onBack }: Props) {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          {/* Files Tab */}
+          <TabsContent value="files">
+            <div className="space-y-3">
+              {/* Connection hint */}
+              {!isConnected && (
+                <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/25 rounded-xl px-3 py-2">
+                  <FolderOpen className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                  <p className="text-xs text-amber-700 dark:text-amber-300">
+                    Connect Google Drive from the Cloud tab to sync files.
+                  </p>
+                </div>
+              )}
+
+              {/* Site Photos upload */}
+              <div className="bg-card rounded-2xl p-4 shadow-xs">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                    <Image className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      Site Photos
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Upload to Photos folder
+                    </p>
+                  </div>
+                </div>
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  data-ocid="site_detail.photo_upload_button"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) void handleFileUpload(f, "photo");
+                    if (photoInputRef.current) photoInputRef.current.value = "";
+                  }}
+                />
+                <Button
+                  data-ocid="site_detail.photo_button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-9 text-xs"
+                  disabled={photoUploading}
+                  onClick={() => photoInputRef.current?.click()}
+                >
+                  {photoUploading ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-3.5 h-3.5 mr-1.5" />
+                      Add Photo
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Documents/Bills upload */}
+              <div className="bg-card rounded-2xl p-4 shadow-xs">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-purple-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      Documents / Bills
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Upload to Documents folder
+                    </p>
+                  </div>
+                </div>
+                <input
+                  ref={docInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,.xlsx,.txt,image/*"
+                  className="hidden"
+                  data-ocid="site_detail.document_upload_button"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) void handleFileUpload(f, "document");
+                    if (docInputRef.current) docInputRef.current.value = "";
+                  }}
+                />
+                <Button
+                  data-ocid="site_detail.document_button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-9 text-xs"
+                  disabled={docUploading}
+                  onClick={() => docInputRef.current?.click()}
+                >
+                  {docUploading ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-3.5 h-3.5 mr-1.5" />
+                      Add Document
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Uploaded files list */}
+              {siteFiles.length > 0 && (
+                <div>
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1 mb-2">
+                    Uploaded Files
+                  </h3>
+                  <div className="space-y-2">
+                    {siteFiles.map((f, idx) => (
+                      <div
+                        key={`${f.name}-${f.uploadedAt}`}
+                        data-ocid={`site_detail.files_list.item.${idx + 1}`}
+                        className="bg-card rounded-xl p-3 flex items-center gap-3 shadow-xs"
+                      >
+                        <div
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                            f.category === "photo"
+                              ? "bg-emerald-500/10"
+                              : "bg-purple-500/10"
+                          }`}
+                        >
+                          {f.category === "photo" ? (
+                            <Image className="w-4 h-4 text-emerald-500" />
+                          ) : (
+                            <FileText className="w-4 h-4 text-purple-500" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-foreground truncate">
+                            {f.name}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {f.category === "photo" ? "Photo" : "Document"} ·{" "}
+                            {new Date(f.uploadedAt).toLocaleDateString("en-IN")}
+                          </p>
+                        </div>
+                        <Badge
+                          variant="secondary"
+                          className="text-[10px] px-1.5 py-0.5 h-auto flex-shrink-0"
+                        >
+                          Queued
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {siteFiles.length === 0 && (
+                <div
+                  data-ocid="site_detail.files_empty_state"
+                  className="bg-card rounded-2xl p-8 text-center"
+                >
+                  <FolderOpen className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="font-medium text-foreground text-sm">
+                    No files yet
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Upload photos and documents for this site
+                  </p>
+                </div>
+              )}
+            </div>
           </TabsContent>
 
           {/* Labour Tab */}
