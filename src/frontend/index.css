@@ -1,0 +1,230 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* SD Corp - Construction Management App */
+/* Aesthetic: Industrial Amber — bold, heavy, authoritative */
+
+@font-face {
+  font-family: "Cabinet Grotesk";
+  src: url("/assets/fonts/CabinetGrotesk-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("/assets/fonts/Satoshi-Variable.woff2") format("woff2");
+  font-weight: 300 900;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+
+    /* Light mode — clean white with amber accents */
+    --background: 0.98 0.005 85;
+    --foreground: 0.18 0.02 55;
+    --card: 1 0 0;
+    --card-foreground: 0.18 0.02 55;
+    --popover: 1 0 0;
+    --popover-foreground: 0.18 0.02 55;
+
+    /* Primary — deep amber */
+    --primary: 0.65 0.18 52;
+    --primary-foreground: 1 0 0;
+
+    /* Secondary — soft amber tint */
+    --secondary: 0.95 0.03 80;
+    --secondary-foreground: 0.25 0.04 55;
+
+    --muted: 0.94 0.01 80;
+    --muted-foreground: 0.52 0.03 60;
+
+    /* Accent — warm orange */
+    --accent: 0.92 0.05 75;
+    --accent-foreground: 0.25 0.04 55;
+
+    --destructive: 0.57 0.22 27;
+    --destructive-foreground: 1 0 0;
+
+    --border: 0.90 0.02 80;
+    --input: 0.90 0.02 80;
+    --ring: 0.65 0.18 52;
+
+    /* Transaction type colors */
+    --tx-received: 0.62 0.17 145;
+    --tx-received-bg: 0.95 0.05 145;
+    --tx-material: 0.65 0.18 52;
+    --tx-material-bg: 0.97 0.04 80;
+    --tx-labour: 0.52 0.19 255;
+    --tx-labour-bg: 0.93 0.04 255;
+    --tx-misc: 0.57 0.22 27;
+    --tx-misc-bg: 0.97 0.03 27;
+
+    /* Status */
+    --success: 0.62 0.17 145;
+    --success-bg: 0.95 0.05 145;
+    --warning: 0.75 0.18 70;
+    --danger: 0.57 0.22 27;
+
+    --chart-1: 0.65 0.18 52;
+    --chart-2: 0.62 0.17 145;
+    --chart-3: 0.52 0.19 255;
+    --chart-4: 0.75 0.18 70;
+    --chart-5: 0.57 0.22 27;
+
+    --sidebar: 0.98 0.005 85;
+    --sidebar-foreground: 0.18 0.02 55;
+    --sidebar-primary: 0.65 0.18 52;
+    --sidebar-primary-foreground: 1 0 0;
+    --sidebar-accent: 0.92 0.05 75;
+    --sidebar-accent-foreground: 0.25 0.04 55;
+    --sidebar-border: 0.90 0.02 80;
+    --sidebar-ring: 0.65 0.18 52;
+  }
+
+  .dark {
+    --background: 0.13 0.015 255;
+    --foreground: 0.96 0.005 80;
+    --card: 0.18 0.015 255;
+    --card-foreground: 0.96 0.005 80;
+    --popover: 0.20 0.015 255;
+    --popover-foreground: 0.96 0.005 80;
+
+    /* Primary — vibrant amber in dark */
+    --primary: 0.72 0.19 52;
+    --primary-foreground: 0.10 0.01 255;
+
+    --secondary: 0.23 0.02 255;
+    --secondary-foreground: 0.90 0.01 80;
+
+    --muted: 0.22 0.02 255;
+    --muted-foreground: 0.60 0.02 255;
+
+    --accent: 0.28 0.025 255;
+    --accent-foreground: 0.90 0.01 80;
+
+    --destructive: 0.65 0.22 27;
+    --destructive-foreground: 1 0 0;
+
+    --border: 1 0 0 / 10%;
+    --input: 1 0 0 / 12%;
+    --ring: 0.72 0.19 52;
+
+    /* Transaction type colors in dark mode */
+    --tx-received: 0.72 0.19 145;
+    --tx-received-bg: 0.22 0.06 145;
+    --tx-material: 0.78 0.19 52;
+    --tx-material-bg: 0.22 0.05 52;
+    --tx-labour: 0.65 0.2 255;
+    --tx-labour-bg: 0.22 0.06 255;
+    --tx-misc: 0.65 0.22 27;
+    --tx-misc-bg: 0.22 0.05 27;
+
+    --success: 0.72 0.19 145;
+    --success-bg: 0.22 0.06 145;
+    --warning: 0.78 0.19 52;
+    --danger: 0.65 0.22 27;
+
+    --chart-1: 0.72 0.19 52;
+    --chart-2: 0.72 0.19 145;
+    --chart-3: 0.65 0.2 255;
+    --chart-4: 0.78 0.19 70;
+    --chart-5: 0.65 0.22 27;
+
+    --sidebar: 0.18 0.015 255;
+    --sidebar-foreground: 0.96 0.005 80;
+    --sidebar-primary: 0.72 0.19 52;
+    --sidebar-primary-foreground: 0.10 0.01 255;
+    --sidebar-accent: 0.28 0.025 255;
+    --sidebar-accent-foreground: 0.90 0.01 80;
+    --sidebar-border: 1 0 0 / 10%;
+    --sidebar-ring: 0.72 0.19 52;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: "Satoshi", system-ui, sans-serif;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Satoshi", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Cabinet Grotesk", system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  /* Mobile phone frame on desktop */
+  .mobile-frame {
+    max-width: 430px;
+    min-height: 100dvh;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  /* Safe area bottom padding for bottom nav */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* PIN pad button style */
+  .pin-digit {
+    @apply w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold
+           bg-card border border-border text-foreground
+           active:scale-95 transition-transform select-none cursor-pointer;
+  }
+
+  .pin-dot {
+    @apply w-4 h-4 rounded-full border-2 border-primary transition-all duration-200;
+  }
+
+  .pin-dot-filled {
+    @apply bg-primary border-primary;
+  }
+
+  /* Transaction type badges */
+  .tx-received {
+    color: oklch(var(--tx-received));
+    background-color: oklch(var(--tx-received-bg));
+  }
+  .tx-material {
+    color: oklch(var(--tx-material));
+    background-color: oklch(var(--tx-material-bg));
+  }
+  .tx-labour {
+    color: oklch(var(--tx-labour));
+    background-color: oklch(var(--tx-labour-bg));
+  }
+  .tx-misc {
+    color: oklch(var(--tx-misc));
+    background-color: oklch(var(--tx-misc-bg));
+  }
+
+  /* Stat card accent borders */
+  .stat-amber { border-left: 3px solid oklch(var(--tx-material)); }
+  .stat-green { border-left: 3px solid oklch(var(--tx-received)); }
+  .stat-red { border-left: 3px solid oklch(var(--tx-misc)); }
+  .stat-blue { border-left: 3px solid oklch(var(--tx-labour)); }
+
+  /* Scrollable area hiding scrollbars but allowing scroll */
+  .scroll-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scroll-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
